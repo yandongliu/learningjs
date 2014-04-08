@@ -36,7 +36,7 @@ var test_data=[
 
 var tree = new learningjs.tree();
 //train a model. parameters: training data, label column, features, callback for trained model
-tree.train(training_data,'label', features, function(model, err){
+tree.train(training_data,'label', features, function(model, err) {
   if(err) {
     console.log(err);
   } else {
@@ -54,7 +54,7 @@ tree.train(training_data,'label', features, function(model, err){
     $('body').append(model.classify(test_data[2]));
     $('body').append('</br>');
     //compute overall accuracy on multiple instances
-    model.calcAccuracy(test_data, 'label', function(acc){
+    model.calcAccuracy(test_data, 'label', function(acc) {
       console.log('accuracy: '+acc);
       $('body').append('accuracy: '+acc);
     });
@@ -72,7 +72,9 @@ Similarly you need to import the lib and do the same:
   var training_data = [...];
   var features = {...}
   var test_data = [..]
-  ...
+  tree.train(training_data,'label', features, function(model, err) {
+    ...
+  }
 ```
 
 #License

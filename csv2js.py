@@ -2,6 +2,7 @@
   convert csv file to json objects
 
   usage: cat csv_file | python csv2js.py > json_file
+
   note:
    1) 1st line must be header
    2) also remember to remove label from 'features' so it's not used for training
