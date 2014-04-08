@@ -6,13 +6,14 @@ Author: Yandong Liu. Email: yandongl @ cs.cmu.edu
 There have been a few implementations of decision tree classifiers on the Web such as https://github.com/willkurt/ID3-Decision-Tree but I found they don't deal with real values which significantly constraints their application. Below one can handle both real and categorical values.
 
 #Demo
-Here's a online [Demo](http://www.cs.cmu.edu/~yandongl/learningjs/decision-tree-demo.html) with visualization and a few datasets.
+Here's a online [demo](http://www.cs.cmu.edu/~yandongl/learningjs/decision-tree-demo.html) with visualization and a few datasets.
 
 #Usage
 You need define 3 variables: `training_data`, `features`, and `test_data`. 
-`training_data`: array of JSON object. each object consists of a number of feature_name:feature_value pairs.
-`test_data`: similar to training_data, but consists of test instances to be classified.
-`features`: JSON object for feature definition. format: feature_name:feature_type. feature_type can be category or real.
+
+ * `training_data`: array of JSON object. each object consists of a number of feature_name:feature_value pairs.
+ * `test_data`: similar to training_data, but consists of test instances to be classified.
+ * `features`: JSON object for feature definition. format: feature_name:feature_type. feature_type can be category or real.
 
 ```javascript
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.8.1.min.js"></script>
@@ -61,9 +62,7 @@ tree.train(training_data,'label', features, function(model, err){
 });
 ```
 
-Here's a demo page for above code. You can also try a few datasets by clicking various data buttons above, or drag your pre-defined data .js file (such as this one) to the drop area.
-
-#Use in nodejs
+#Use in Nodejs
 Similarly you need to import the lib and do the same:
 
 ```javascript
@@ -75,7 +74,6 @@ Similarly you need to import the lib and do the same:
   var test_data = [..]
   ...
 ```
-Here's a demo file for its application in nodejs.
 
 #License
 MIT
