@@ -1,14 +1,17 @@
 {
   "name": "learningjs",
-  "version": "0.0.10",
+  "version": "0.0.12",
   "description": "c4.5 decision tree algorithm",
-  "main": "index.js",
+  "main": "learningjs.js",
   "scripts": {
     "test": "node nodetest.js"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/yandongliu/learningjs"
+  },
+  "dependencies": {
+    "underscore": "*"
   },
   "keywords": [
     "decision tree",

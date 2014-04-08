@@ -1,5 +1,5 @@
 var _ = require('underscore');
-var learningjs = require('./index.js');
+var learningjs = require('learningjs');
 
 var tree = new learningjs.tree();
 

@@ -5,7 +5,7 @@ Author: Yandong Liu. Email: yandongl @ cs.cmu.edu
 #Introduction
 There have been a few implementations of decision tree classifiers on the Web such as https://github.com/willkurt/ID3-Decision-Tree but I found they don't deal with real values which significantly constraints their application. Below one can handle both real and categorical values.
 
-#Demo
+#Online Demo
 Here's a online [demo](http://www.cs.cmu.edu/~yandongl/learningjs/decision-tree-demo.html) with visualization and a few datasets.
 
 #Usage
@@ -67,7 +67,7 @@ Similarly you need to import the lib and do the same:
 
 ```javascript
 
-  var learningjs = require('./learningjs.js');
+  var learningjs = require('learningjs');
   var tree = new learningjs.tree();
   var training_data = [...];
   var features = {...}

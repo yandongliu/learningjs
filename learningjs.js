@@ -176,12 +176,6 @@ var learningjs=(function (exports) {
         }
         return g;
       }
-      /*
-      if(node.type == 'result'){ 
-        g.push(['<div style="color:red">'+node.alias+'</div>',node.alias,'']);
-        return g;
-      }
-      */
       return g;
     } ,
 
