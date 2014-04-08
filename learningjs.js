@@ -157,8 +157,6 @@ var learningjs=(function (exports) {
         return g;
       } else if(node.type == 'feature_value'){ 
         var that=this;
-        //g.push(['<div style="color:red">'+node.child.alias+'</div>',node.alias,'']);
-        //g.push([node.child.alias,node.alias,'value']);
         if(node.child.type != 'result'){
           g.push([node.child.alias+'','val:'+node.alias+'</span>','value']);
           g = that.addEdges(node.child, targets, colors, h_color, g);
@@ -196,7 +194,7 @@ var learningjs=(function (exports) {
             var oldVal = $(x).html();
             if(oldVal){
                 var cleanVal = oldVal.replace(/_r[0-9]+/,'');
-                cleanVal = cleanVal.replace(/val:/,'<div style="color:olivedrab;">');
+                cleanVal = cleanVal.replace(/val:/,'<span style="color:olivedrab;">');
                 $(x).html(cleanVal);
             }
           }); 
