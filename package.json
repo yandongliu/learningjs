@@ -1,0 +1,24 @@
+{
+  "name": "learningjs",
+  "version": "0.0.9",
+  "description": "c4.5 decision tree algorithm",
+  "main": "index.js",
+  "scripts": {
+    "test": "node nodetest.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yandongliu/learningjs"
+  },
+  "keywords": [
+    "decision tree",
+    "machine learning",
+    "classifier",
+    "c4.5"
+  ],
+  "author": "Yandong Liu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yandongliu/learningjs/issues"
+  }
+}
