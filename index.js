@@ -21,23 +21,7 @@ var learningjs=(function (exports) {
   else if(typeof __ !== 'undefined')
     _und = __;
   else
-    throw 'underscore.js isn\'t found!'
-    
-  function debugp(msg, depth) {
-    if(!debug) return;
-    var s='';
-    for(var i=0;i<depth*2;i++) {
-      s+=' ';
-    }
-    console.log(s,msg);
-  }
-
-  function printDataset(_s, feature, target, op) {
-    debugp('dataset on '+op+' '+feature,0);
-    _s.each(function(a) {
-      debugp(a[feature]+' '+a[target],0);
-    });
-  }
+    throw 'underscore.js isn\'t found!' 
 
   var tree = function () {}, debug = false; 
 
@@ -114,34 +98,26 @@ var learningjs=(function (exports) {
     },
 
     _c45: function(_s,target,features, featuresType, depth) {
-      debugp('func() tree:'+features, depth);
       var that=this;
       var targets = _und.unique(_s.pluck(target));//unique label values
-      debugp('# target values:'+targets.length, depth);
       //this shouldn't happend
       if (targets.length == 0) {
-        debugp("==no data", depth);
         return {type:"result", val: 'none data', name: 'none data',alias:'none data'+that.randomTag() }; 
       }
       if (targets.length == 1) {
-        debugp("==end node "+targets[0], depth);
         return {type:"result", val: targets[0], name: targets[0],alias:targets[0]+that.randomTag() }; 
       }
       if(features.length == 0) {
-        debugp("==returning the most dominate feature", depth);
         var topTarget = that.mostCommon(targets);
         return {type:"result", val: topTarget, name: topTarget, alias: topTarget+that.randomTag()};
       }
       var bestFeatureData = this.maxGain(_s,target,features, featuresType);
       var bestFeature = bestFeatureData.feature;
-      debugp('bestFeature:', bestFeatureData+' type:'+featuresType[bestFeature]);
-      debugp('feature:'+bestFeature+' type:'+featuresType[bestFeature]+' cut:'+bestFeatureData.cut, depth);
       if(featuresType[bestFeature]==='category') {
         var remainingFeatures = _und.without(features,bestFeature);
         var possibleValues = _und.unique(_s.pluck(bestFeature));
         var node = {name: bestFeature,alias: bestFeature+that.randomTag()};
         node.type = "feature_category";
-        debugp(featuresType[bestFeature], depth);
         node.vals = _und.map(possibleValues,function(v){
           var _newS = _und(_s.filter(function(x) {return x[bestFeature] == v}));
           var child_node = {name:v,alias:v+that.randomTag(),type: "feature_value"};
@@ -157,15 +133,11 @@ var learningjs=(function (exports) {
         node.vals=[];
 
         var _newS_r = _und(_s.filter(function(x) {return parseFloat(x[bestFeature])>bestFeatureData.cut}));
-        debugp('rightside dataset size:'+_newS_r._wrapped.length, depth);
-        //printDataset(_newS_r,bestFeature, 'label','>'+bestFeatureData.cut);
         var child_node_r = {name:bestFeatureData.cut.toString(),alias:'>'+bestFeatureData.cut.toString()+that.randomTag(),type: "feature_value"};
         child_node_r.child = that._c45(_newS_r,target,remainingFeatures, featuresType, depth+1);
         node.vals.push(child_node_r);
 
         var _newS_l = _und(_s.filter(function(x) {return parseFloat(x[bestFeature])<=bestFeatureData.cut}));
-        debugp('leftside dataset :'+_newS_l._wrapped.length, depth);
-        //printDataset(_newS_l,bestFeature, 'label','<='+bestFeatureData.cut);
         var child_node_l= {name:bestFeatureData.cut.toString(),alias:'<='+bestFeatureData.cut.toString()+that.randomTag(),type: "feature_value"};
         child_node_l.child = that._c45(_newS_l,target,remainingFeatures, featuresType, depth+1);
         node.vals.push(child_node_l);
@@ -254,18 +226,12 @@ var learningjs=(function (exports) {
         return {feature:feature, gain:setEntropy - sumOfEntropies, cut:0};
       } else{//default is real
         var attrVals = _und.unique(_s.pluck(feature));//feature values
-        debugp(feature+' unique values',0);
         var gainVals=attrVals.map(function(cut) {
           var cutf=parseFloat(cut);
           var _gain = setEntropy-that.conditionalEntropy(_s, feature, cutf, target);
           return {feature:feature, gain:_gain, cut:cutf};
         });
-        //_.max(attrVals, function(v) {return setEntropy-conditionalEntropy(_s, feature, v, target)});
-        //console.log(gainVals);
-        //console.log(_.max(gainVals, function(e){return e.gain}));
-        //return {gain:_.max(gainVals), val:;
         var _maxgain= _und.max(gainVals, function(e){return e.gain});
-        debugp('maxgain: '+_maxgain.cut+' '+_maxgain.gain,0);
         return _maxgain;
       } 
     },

@@ -1,6 +1,6 @@
 {
   "name": "learningjs",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "c4.5 decision tree algorithm",
   "main": "index.js",
   "scripts": {
