@@ -14,7 +14,7 @@ function processTestFile(f) {
   var reader = new FileReader(); 
   reader.onload = (function(theFile) {
     return function(e) { 
-      loadContent(e.target.result, function(D) {
+      loadString(e.target.result, function(D) {
         var start = (new Date).getTime();
         var tree = new learningjs.tree();
         if(typeof trained_model === 'undefined') {
@@ -41,7 +41,7 @@ function processTrainFile(f) {
   var reader = new FileReader(); 
   reader.onload = (function(theFile) {
     return function(e) { 
-      loadContent(e.target.result, function(D) {
+      loadString(e.target.result, function(D) {
         //console.log(D);
         var start = (new Date).getTime();
         var tree = new learningjs.tree();

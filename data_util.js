@@ -175,7 +175,7 @@ loadRealFile: function(fn, cb) {
 
 }
 
-function loadContent (content, cb) {
+function loadString (content, cb) {
   var data=[];
   var header = true;
   var targets=[];

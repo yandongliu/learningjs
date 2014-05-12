@@ -16,7 +16,7 @@ Data loading: data_util.js provides three methods:
 
  * `loadTextFile`: the csv-format file will be loaded from disk and columns are parsed as strings unless 2nd line specifies feature types.
  * `loadRealFile`: the csv-format file will be loaded from disk and columns are parsed as real numbers.
- * `loadContent`: a big string will be chopped into lines and columns are parsed as strings unless 2nd line specifies feature types.
+ * `loadString`: a big string will be chopped into lines and columns are parsed as strings unless 2nd line specifies feature types.
 
 In the loading callback function you will obtain a data object D on which you can apply the learning methods. Note that only Decision Tree supports both real and categorical features. Logistic Regression works on real features only.  
 
@@ -25,7 +25,7 @@ In the loading callback function you will obtain a data object D on which you ca
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.8.1.min.js"></script>
 <script type="text/javascript" src="data_util.js"></script>
 <script type="text/javascript" src="learningjs.js"></script>
-loadContent(content, function(D) {
+loadString(content, function(D) {
   var tree = new learningjs.tree();
   tree.train(D, function(model, err){
     if(err) {

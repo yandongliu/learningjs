@@ -56,14 +56,14 @@ There's also an optional 2nd line for feature types and the 'label' column for 2
 <ul>
 <li><span class="var">loadTextFile</span>: the csv-format file will be loaded from disk and columns are parsed as strings unless 2nd line specifies feature types.
 <li><span class="var">loadRealFile</span>: the csv-format file will be loaded from disk and columns are parsed as real numbers.
-<li><span class="var">loadContent</span>: a big string will be chopped into lines and columns are parsed as strings unless 2nd line specifies feature types.
+<li><span class="var">loadString</span>: a big string will be chopped into lines and columns are parsed as strings unless 2nd line specifies feature types.
 </ul>
 In the loading callback function you will obtain a data object <span class="italic">D</span> on which you can apply the learning methods. Note that only Decision Tree supports both real and categorical features. Logistic Regression works on real features only.
 
 <p>
 <li><span class="topic">Use in browser:</span>
 <pre>
-loadContent(content, function(D) {
+loadString(content, function(D) {
   var tree = new learningjs.tree();
   tree.train(D, function(model, err){
     if(err) {
