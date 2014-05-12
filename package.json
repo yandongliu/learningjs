@@ -1,19 +1,22 @@
 {
   "name": "learningjs",
-  "version": "0.0.12",
-  "description": "c4.5 decision tree algorithm",
+  "version": "0.1.0",
+  "description": "logistic regression/c4.5 decision tree algorithm",
   "main": "learningjs.js",
   "scripts": {
-    "test": "node nodetest.js"
+    "test_tree": "node test_lr.js",
+    "test_logistic": "node test_tree.js"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/yandongliu/learningjs"
   },
   "dependencies": {
-    "underscore": "*"
+    "underscore": "*",
+    "lazy": "*"
   },
   "keywords": [
+    "logistic regression",
     "decision tree",
     "machine learning",
     "classifier",

@@ -1,6 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
-// c45 decision tree algorithm (https://en.wikipedia.org/wiki/C4.5_algorithm)
-// upon the implementation of id3 decision tree at https://github.com/willkurt/ID3-Decision-Tree
+// javascript implementation of 
+//   decision tree
+//   logistic regression
 //
 // author: yandong liu
 //  email: yandongl _at_ cs.cmu.edu
@@ -8,7 +9,7 @@
 
 
 var learningjs=(function (exports) {
-  'use strict';
+  'use strict'; 
 
   var _und;
 
@@ -21,32 +22,27 @@ var learningjs=(function (exports) {
   else if(typeof __ !== 'undefined')
     _und = __;
   else
-    throw 'underscore.js isn\'t found!' 
+    throw 'underscore.js isn\'t found!'
+
+  var debug=true;
+
+  function debugp(msg, depth) {
+    if(!debug) return;
+    var s='';
+    for(var i=0;i<depth*2;i++) {
+      s+=' ';
+    }
+    console.log(s,msg);
+  }
 
   var tree = function () {}, debug = false; 
 
   tree.prototype = {
 
-    train: function(data, target, featuresType, cb) {
-      var features=[];
-      var _s=_und(data);
-      for(var f in featuresType) {
-        if (featuresType.hasOwnProperty(f)) {
-          if(featuresType[f]!=='real' && featuresType[f]!=='category') {
-            console.log('ERROR. unrecogznied feature type '+featuresType[f]);
-            cb(undefined, 'ERROR:unrecognized feature type '+featuresType[f]);
-            return;
-          }
-          features.push(f);
-        }
-      }
-      var targets = _und.unique(_s.pluck(target));
-      this.features=features;
-      this.targets=targets;
+    train: function(D, cb) {
+      var major_label = this.mostCommon(D.targets);
       cb({
-        features:this.features,
-        targets:this.targets,
-        model:this._c45(_s,target,features, featuresType, 0),
+        model:this._c45(D.data, D.targets, D.l_featuresIndex, D.featureNames, D.featuresType, major_label),
         classify: function(sample) {
           var root = this.model;
           if(typeof root === 'undefined') {
@@ -56,110 +52,113 @@ var learningjs=(function (exports) {
             var childNode;
             if(root.type === 'feature_real') {
               var feature_name = root.name;
-              var sampleVal = parseFloat(sample[feature_name]);
+              var sampleVal = parseFloat(sample[D.feature_name2id[feature_name]]);
               if(sampleVal<=root.cut)
                 childNode=root.vals[1];
               else
                 childNode=root.vals[0]; 
             } else {
               var attr = root.name;
-              var sampleVal = sample[attr];
+              var sampleVal = sample[D.feature_name2id[attr]];
               childNode = _und.detect(root.vals,function(x){return x.name == sampleVal});
             }
             //unseen feature value (didn't appear in training data)
             if(typeof childNode === 'undefined') {
-              console.log('unseen feature value:',root.name,'sample:',sample);
-              return 'unkown';
+              //console.log('unseen feature value:',root.name,'sample:',sample);
+              return major_label;
             }
             root = childNode.child;
           }
           return root.val;
         },
-        calcAccuracy: function(samples, target, cb) {
-          var total = 0;
+        calcAccuracy: function(samples, targets, cb) {
+          var total = samples.length;
           var correct = 0;
-          var that = this;
-          _und.each(samples, function(s) {
-            total++;
-            var pred = that.classify(s);
-            var actual = s[target];
+          for(var i=0;i<samples.length;i++) {
+            var pred = this.classify(samples[i]);
+            var actual = targets[i];
             //console.log('predict:'+pred,' actual:'+actual);
             if(pred === actual){
               correct++;
             }
-          });
-          console.log( 'got '+correct +' correct out of '+total+' examples.');
+          }
           if(total>0)
-            cb(correct/total);
+            cb(correct/total, correct, total);
           else
             cb(0.0);
         },
       }, undefined);
     },
 
-    _c45: function(_s,target,features, featuresType, depth) {
-      var that=this;
-      var targets = _und.unique(_s.pluck(target));//unique label values
-      //this shouldn't happend
+    _c45: function(data, targets, l_features_id, l_features_name, featuresType, major_label) {
+      var node;
       if (targets.length == 0) {
-        return {type:"result", val: 'none data', name: 'none data',alias:'none data'+that.randomTag() }; 
+        debugp("==no data",0);
+        return {type:"result", val: major_label, name: major_label,alias:major_label+this.randomTag() }; 
       }
       if (targets.length == 1) {
-        return {type:"result", val: targets[0], name: targets[0],alias:targets[0]+that.randomTag() }; 
+        debugp("==end node "+targets[0],0);
+        return {type:"result", val: targets[0], name: targets[0],alias:targets[0]+this.randomTag() }; 
       }
-      if(features.length == 0) {
-        var topTarget = that.mostCommon(targets);
-        return {type:"result", val: topTarget, name: topTarget, alias: topTarget+that.randomTag()};
+      if(l_features_name.length == 0) {
+        debugp("==returning the most dominate feature", 0);
+        var topTarget = this.mostCommon(targets);
+        return {type:"result", val: topTarget, name: topTarget, alias: topTarget+this.randomTag()};
       }
-      var bestFeatureData = this.maxGain(_s,target,features, featuresType);
-      var bestFeature = bestFeatureData.feature;
-      if(featuresType[bestFeature]==='category') {
-        var remainingFeatures = _und.without(features,bestFeature);
-        var possibleValues = _und.unique(_s.pluck(bestFeature));
-        var node = {name: bestFeature,alias: bestFeature+that.randomTag()};
-        node.type = "feature_category";
-        node.vals = _und.map(possibleValues,function(v){
-          var _newS = _und(_s.filter(function(x) {return x[bestFeature] == v}));
-          var child_node = {name:v,alias:v+that.randomTag(),type: "feature_value"};
-          child_node.child = that._c45(_newS,target,remainingFeatures, featuresType, depth+1);
-          return child_node; 
-        });
-      } else{//default is real
-        var remainingFeatures = _und.without(features,bestFeature);
-        var possibleValues = _und.unique(_s.pluck(bestFeature));
-        var node = {name: bestFeature,alias: bestFeature+that.randomTag()};
+      var bestFeatureData = this.maxGain(data,targets,l_features_id, l_features_name, featuresType);
+      var best_id = bestFeatureData.feature_id;//feature_id is index in data file
+      var best_name = bestFeatureData.feature_name;
+      //console.log('bestFeatureData:',bestFeatureData);
+      //console.log(featuresType[bestFeatureData.feature_name]);
+      var remainingFeaturesId = _und.without(l_features_id, best_id);
+      var remainingFeaturesName = _und.without(l_features_name, best_name);
+      if(featuresType[best_name]==='real') {
+        node = {name: best_name, id:best_id,alias: best_name+this.randomTag()};
         node.type = "feature_real";
         node.cut = bestFeatureData.cut;
         node.vals=[];
 
-        var _newS_r = _und(_s.filter(function(x) {return parseFloat(x[bestFeature])>bestFeatureData.cut}));
-        var child_node_r = {name:bestFeatureData.cut.toString(),alias:'>'+bestFeatureData.cut.toString()+that.randomTag(),type: "feature_value"};
-        child_node_r.child = that._c45(_newS_r,target,remainingFeatures, featuresType, depth+1);
+        var _newS_r = this.filterByCutGreater(data, targets, bestFeatureData.cut, best_id);
+        //printDataset(_newS_r,bestFeature, 'label','>'+bestFeatureData.cut);
+        var child_node_r = {name:bestFeatureData.cut.toString(),alias:'>'+bestFeatureData.cut.toString()+this.randomTag(),type: "feature_value"};
+        child_node_r.child = this._c45(_newS_r[0], _newS_r[1], remainingFeaturesId, remainingFeaturesName, featuresType, major_label);
         node.vals.push(child_node_r);
 
-        var _newS_l = _und(_s.filter(function(x) {return parseFloat(x[bestFeature])<=bestFeatureData.cut}));
-        var child_node_l= {name:bestFeatureData.cut.toString(),alias:'<='+bestFeatureData.cut.toString()+that.randomTag(),type: "feature_value"};
-        child_node_l.child = that._c45(_newS_l,target,remainingFeatures, featuresType, depth+1);
+        var _newS_l = this.filterByCutLessEqual(data, targets, bestFeatureData.cut, best_id);
+        //printDataset(_newS_l,bestFeature, 'label','<='+bestFeatureData.cut);
+        var child_node_l= {name:bestFeatureData.cut.toString(),alias:'<='+bestFeatureData.cut.toString()+this.randomTag(),type: "feature_value"};
+        child_node_l.child = this._c45(_newS_l[0],_newS_l[1], remainingFeaturesId, remainingFeaturesName, featuresType, major_label);
         node.vals.push(child_node_l);
 
+      } else{ //default is text
+        var possibleValues = _und.unique(this.getCol(data, best_id));
+        node = {name: best_name, alias: best_name+this.randomTag()};
+        node.type = "feature_category";
+        node.vals=[];
+
+        for(var i=0;i<possibleValues.length;i++) {
+          var _newS = this.filterByValue(data,targets,best_id, possibleValues[i]);
+          var child_node = {name:possibleValues[i], alias:possibleValues[i]+this.randomTag(),type: "feature_value"};
+          child_node.child = this._c45(_newS[0],_newS[1],remainingFeaturesId,remainingFeaturesName, featuresType, major_label);
+          node.vals.push(child_node);
+        }
       }
       return node;
     }, 
 
     //node(alias, vals(node))
-    addEdges:function(node, targets, colors, h_color, g){
-	    var that=this;
+    addEdges:function(node, colors, h_color, g){
+      var that = this;
       if(node.type == 'feature_real'||node.type=='feature_category'){
         _und.each(node.vals,function(m){
           g.push(['val:'+m.alias+'</span>',node.alias+'','node']);
-          g = that.addEdges(m, targets, colors, h_color, g);
+          g = that.addEdges(m, colors, h_color, g);
         });
         return g;
       } else if(node.type == 'feature_value'){ 
-        var that=this;
         if(node.child.type != 'result'){
           g.push([node.child.alias+'','val:'+node.alias+'</span>','value']);
-          g = that.addEdges(node.child, targets, colors, h_color, g);
+          g = this.addEdges(node.child, colors, h_color, g);
         } else {
           var color='black';
           if(node.child.name in h_color) {
@@ -185,7 +184,7 @@ var learningjs=(function (exports) {
       var g = new Array();
       var colors=['red','blue','green','yellow','black','fuchsia','gold','indigo','lime','mintcream','navy','olive','salmon','skyblue'];
       var h_color={};
-      g = this.addEdges(model.model,model.targets,colors,h_color,g).reverse();
+      g = this.addEdges(model.model, colors,h_color,g).reverse();
       window.g = g;
       var data = google.visualization.arrayToDataTable(g.concat(g));
       var chart = new google.visualization.OrgChart(document.getElementById(divId));
@@ -200,36 +199,89 @@ var learningjs=(function (exports) {
           }); 
       });
       chart.draw(data, {allowHtml: true}); 
-	    cb();
+      cb();
     }, 
 
+    getCol:function(d, colIdx) {
+      var col = [];
+      for(var i=0;i<d.length;i++) col.push(d[i][colIdx]);
+      return col;
+    },
+
+    filterByCutLessEqual:function(d, targets, cut, col) {
+      var nd = [];
+      var nt = [];
+      if(d.length != targets.length) {
+        console.log('ERRROR: difft dimensions');
+      }
+      for(var i=0;i<d.length;i++) 
+        if(parseFloat(d[i][col])<=cut) {
+          nd.push(d[i]);
+          nt.push(targets[i]);
+        }
+      return [nd, nt];
+    },
+
+    filterByCutGreater:function(d, targets, cut, col) {
+      var nd = [];
+      var nt = [];
+      if(d.length != targets.length) {
+        console.log('ERRROR: difft dimensions');
+      }
+      for(var i=0;i<d.length;i++) 
+        if(parseFloat(d[i][col])>cut) {
+          nd.push(d[i]);
+          nt.push(targets[i]);
+        }
+      return [nd, nt];
+    },
+
+    //filter data, target at the same time
+    filterByValue:function(d,t, featureIdx, val) {
+      var nd = [];
+      var nt = [];
+      for(var i=0;i<d.length;i++) 
+        if(d[i][featureIdx]===val) {
+          nd.push(d[i]);
+          nt.push(t[i]);
+        }
+      return [nd,nt];
+    },
+
     //compute info gain for this feature. feature can be category or real type
-    gain: function(_s,target,feature, featuresType){
-		  var that=this;
-      var setEntropy = that.entropy(_s.pluck(target));
-      if(featuresType[feature]==='category') {
-        var attrVals = _und.unique(_s.pluck(feature));//feature values
-        var setSize = _s.size();
-        var entropies = attrVals.map(function(n){//conditional entropy
-          var subset = _s.filter(function(x){return x[feature] === n});//instances of this feature value
-          return (subset.length/setSize)*that.entropy(_und.pluck(subset,target));
-        });
-        var sumOfEntropies =  entropies.reduce(function(a,b){return a+b},0);
-        return {feature:feature, gain:setEntropy - sumOfEntropies, cut:0};
-      } else{//default is real
-        var attrVals = _und.unique(_s.pluck(feature));//feature values
-        var gainVals=attrVals.map(function(cut) {
-          var cutf=parseFloat(cut);
-          var _gain = setEntropy-that.conditionalEntropy(_s, feature, cutf, target);
-          return {feature:feature, gain:_gain, cut:cutf};
-        });
+    gain: function(data,targets, feature_id, featureName, featuresType) {
+      if(data.length != targets.length) {
+        console.log('ERRROR: difft dimensions');
+      }
+      var setEntropy = this.entropy(targets);
+      //console.log('setEntropy:',setEntropy);
+      var vals = _und.unique(this.getCol(data,feature_id));
+      if(featuresType[featureName] === 'real') {
+        var gainVals = [];
+        for(var i=0;i<vals.length;i++) {
+          var cutf=parseFloat(vals[i]);
+          var _gain = setEntropy-this.conditionalEntropy(data, targets, feature_id, cutf);
+          gainVals.push({feature_id:feature_id, feature_name:featureName, gain:_gain, cut:cutf});
+        }
         var _maxgain= _und.max(gainVals, function(e){return e.gain});
+        //debugp('real maxgain: '+_maxgain.cut+' '+_maxgain.gain,0);
         return _maxgain;
+      } else{//default is text
+        var setSize = data.length;
+        var entropies = [];
+        for(var i=0;i<vals.length;i++) {
+          var subset = this.filterByValue(data, targets, feature_id, vals[i]);
+          entropies.push((subset[0].length/setSize)*this.entropy(subset[1]));
+        }
+        //console.log(featureName,' entropies:',entropies);
+        var sumOfEntropies =  _und(entropies).reduce(function(a,b){return a+b},0);
+        //console.log(featureName,' sumOfEntropies:',sumOfEntropies);
+        return {feature_id:feature_id, feature_name:featureName, gain:setEntropy - sumOfEntropies, cut:0};
       } 
     },
 
     entropy: function (vals){
-      var that=this;
+      var that = this;
       var uniqueVals = _und.unique(vals);
       var probs = uniqueVals.map(function(x){return that.prob(x,vals)});
       var logVals = probs.map(function(p){return -p*that.log2(p) });
@@ -237,21 +289,21 @@ var learningjs=(function (exports) {
     }, 
 
     //conditional entropy if data is split to two
-    conditionalEntropy: function(_s, feature, cut, target) {
-      var that=this;
-      var subset1 = _s.filter(function(x){return parseFloat(x[feature]) <= cut});//instances of this feature value
-      var subset2 = _s.filter(function(x){return parseFloat(x[feature]) > cut});//instances of this feature value
-      var setSize = _s.size();
-      return subset1.length/setSize*that.entropy(_und.pluck(subset1,target))+ subset2.length/setSize*that.entropy(_und.pluck(subset2,target));
+    conditionalEntropy: function(_s, targets, feature_id, cut) {
+      var subset1 = this.filterByCutLessEqual(_s, targets, cut, feature_id);
+      var subset2 = this.filterByCutGreater(_s, targets, cut, feature_id);
+      var setSize = _s.length;
+      return subset1[0].length/setSize*this.entropy(subset1[1]) + subset2[0].length/setSize*this.entropy(subset1[1]);
     }, 
 
-    maxGain: function (_s,target,features, featuresType){
-      var that=this;
-      var g45 = features.map(function(feature) {
-        return that.gain(_s,target,feature, featuresType);
-      });
+    maxGain: function (data, targets, l_features_id, l_features_name, featuresType){
+      var g45 = [];
+      for(var i=0;i<l_features_id.length;i++) {
+        //console.log('maxgain feature:'+l_features_id[i]+' '+l_features_name[i]);
+        g45.push(this.gain(data,targets,l_features_id[i], l_features_name[i], featuresType));
+      }
       return _und.max(g45,function(e){
-      return e.gain;
+        return e.gain;
       });
     },
 
@@ -269,7 +321,7 @@ var learningjs=(function (exports) {
       var that=this;
       return  _und.sortBy(l,function(a){
         return that.count(a,l);
-      }).reverse()[0];
+      }).reverse()[1];
     },
 
     count: function (a,l){
@@ -282,7 +334,166 @@ var learningjs=(function (exports) {
 
  }
 
+  //logistic regression
+  var lr = function () {};
+
+  lr.prototype = {
+
+    train: function(D, cb) {
+      cb({
+        that:this,
+        thetas:this.optimize(D),
+        classify: function(sample) {
+          var max_p = this.that.compThetaXProduct(this.thetas[D.l_targets[0]], sample, D.nfeatures);
+          var max_t = D.l_targets[0];
+          for(var i=1;i<D.ntargets;i++) {
+            var target = D.l_targets[i];
+            var p = this.that.compThetaXProduct(this.thetas[target], sample, D.nfeatures);
+            if(max_p<p) {
+              max_p = p;
+              max_t = target;
+            }
+          }
+          return max_t;
+        },
+        calcAccuracy: function(samples, targets, cb) {
+          var total = samples.length;
+          var correct = 0;
+          for(var i=0;i<samples.length;i++) {
+            var pred = this.classify(samples[i]);
+            var actual = targets[i];
+            //console.log('predict:'+pred,' actual:'+actual);
+            if(pred === actual){
+              correct++;
+            }
+          }
+          if(total>0)
+            cb(correct/total, correct, total);
+          else
+            cb(0.0);
+        },
+      }, undefined);
+    },
+
+    printThetas: function(thetas, ntargets, l_targets, nfeatures) {
+      for(var i=0;i<ntargets;i++) {
+        console.log(l_targets[i]);
+        for(var j=0;j<nfeatures;j++) {
+          process.stdout.write(thetas[l_targets[i]][j]+' ');
+        }
+        console.log(' ');
+      }
+    },
+
+    optimize: function(D) {
+
+      if(!('optimizer' in D)) D.optimizer = 'sgd';
+      if(!('learning_rate' in D)) D.learning_rate = 0.005;
+      if(!('l2_weight' in D)) D.l2_weight = 0.000001;
+      if(!('iterations' in D)) D.iterations = 50;
+
+      var thetas={};
+      for(var i=0;i<D.ntargets;i++) {
+        var theta=[];
+        for(var j=0;j<D.nfeatures;j++) {
+          theta.push(0.0);
+        }
+        thetas[D.l_targets[i]]=theta; 
+      }
+      for(var i=0;i<D.iterations;i++) {
+        if(D.optimizer === 'sgd')
+          this.sgd_once(thetas, D.data, D.nfeatures, D.targets,D.l_targets, D.ntargets, D.learning_rate, D.l2_weight);
+        else if (D.optimizer === 'gd') 
+          this.gd_batch(thetas, D.data, D.nfeatures,D.targets,D.l_targets, D.ntargets, D.learning_rate, D.l2_weight);
+        else {
+          console.log('unrecognized optimizer:'+D.optimizer);
+          break;
+        }
+      }
+      //this.printThetas(thetas, D.ntargets, D.l_targets, D.nfeatures);
+      return thetas;
+    },
+
+    gd_batch: function(thetas, training, nfeatures,targets,l_targets, ntargets, learning_rate, l2_weight){
+      for(var t=0;t<ntargets;t++) {
+        var gradient=[];
+        for(var k=0;k<nfeatures;k++) {
+          gradient.push(0.0);
+        }
+        var target = l_targets[t];
+
+        for(var i=0;i<training.length;i++) {
+          var prdt=[], this_prdt;
+          prdt.push(this.compThetaXProduct(thetas[l_targets[0]], training[i], nfeatures));
+          if(t==0) this_prdt = prdt[0];
+          var max_prdt = prdt[0];
+
+          for(var j=1;j<ntargets;j++) {
+            var prdt1 = this.compThetaXProduct(thetas[l_targets[j]], training[i], nfeatures);
+            prdt[j] = prdt1;
+            if(t==j) this_prdt = prdt1;
+            if(max_prdt < prdt1) max_prdt= prdt1;
+          }
+          var z=0.0;
+          for(var j=0;j<ntargets;j++) {
+            z+=Math.exp(prdt[j]-max_prdt);
+          }
+          var p = Math.exp(this_prdt-max_prdt)/z;
+          for(var k=0;k<nfeatures;k++) {
+            if(target === targets[i]) {
+              gradient[k] += ((1.0-p)*training[i][k]);
+            } else {
+              gradient[k] += ((0.0-p)*training[i][k]);
+            }
+          }
+        }
+        var theta = thetas[target];
+        for(var k=0;k<nfeatures;k++) {
+          theta[k] += (learning_rate* gradient[k] - 2*training.length*l2_weight*theta[k]);
+        }
+      }
+    },
+
+    sgd_once: function(thetas, training, nfeatures,targets,l_targets, ntargets, learning_rate, l2_weight){
+      for(var i=0;i<training.length;i++) {
+        var prdt=[];
+        prdt.push(this.compThetaXProduct(thetas[l_targets[0]], training[i], nfeatures));
+        var max_prdt = prdt[0];
+        for(var j=1;j<ntargets;j++) {
+          var prdt1 = this.compThetaXProduct(thetas[l_targets[j]], training[i], nfeatures);
+          prdt[j] = prdt1;
+          if(max_prdt < prdt1) max_prdt= prdt1;
+        }
+        var z=0.0;
+        for(var j=0;j<ntargets;j++) {
+          z+=Math.exp(prdt[j]-max_prdt);
+        }
+        for(var j=0;j<ntargets;j++) {
+          var p = Math.exp(prdt[j]-max_prdt)/z;
+          var target = l_targets[j];
+          var theta = thetas[target];
+          for(var k=0;k<nfeatures;k++) {
+            if(target === targets[i]) {
+              theta[k] += (learning_rate*(1.0-p)*training[i][k] - 2*l2_weight*theta[k]);
+            } else {
+              theta[k] += (learning_rate*(0.0-p)*training[i][k] - 2*l2_weight*theta[k]);
+            }
+          }
+        }
+      }
+    }, 
+
+    compThetaXProduct:function(theta, sample, nfeatures) {
+      var a=0;
+      for(var i=0;i<nfeatures;i++) {
+        a += theta[i]*sample[i];
+      }
+      return a;
+    }
+ }
+
   var exports = exports||{};
+  exports.logistic = lr;
   exports.tree = tree;
   return exports;
 
