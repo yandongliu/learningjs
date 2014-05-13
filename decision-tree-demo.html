@@ -89,7 +89,7 @@ data_util.loadRealFile(fn_csv, function(D) {
   //logistic regression. following params are optional
   D.optimizer = 'sgd'; //default choice. other choice is 'gd'
   D.learning_rate = 0.005;
-  D.l2_weight = 0.0;
+  D.l2_weight = 0.000001;
   D.iterations = 1000; //increase number of iterations for better performance
 
   new learningjs.logistic().train(D, function(model, err){

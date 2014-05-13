@@ -6,7 +6,7 @@ function renderTest (model, samples, features, targets, $el) {
     var s = samples[i];
     var target = targets[i];
     var vals_for_sample = s;
-    $el.append("<tr><td>"+vals_for_sample.join('</td><td>')+"</td><td><b>"+model.classify(s)+"</b></td><td> "+target+"</td></tr>");
+    $el.append("<tr><td>"+vals_for_sample.join('</td><td>')+"</td><td><b>"+model.predict(s)+"</b></td><td> "+target+"</td></tr>");
   }
 } 
 

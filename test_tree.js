@@ -4,12 +4,11 @@
 //    https://archive.ics.uci.edu/ml/datasets.html
 //
 //  you have to manually add the header(features) to each data file
-//  and provide a file for feature types
 //////////////////////////////////////////////////////////////////
 'use strict';
 
-var learningjs = require('learningjs.js');
-var data_util = require("data_util.js");
+var learningjs = require('./js/learningjs.js');
+var data_util = require("./js/data_util.js");
 
 if(process.argv.length<4) {
   console.log('usage: %s %s training_file test_file', process.argv[0], process.argv[1]);
@@ -24,7 +23,7 @@ console.log('=== TEST:%s ===', fn_test);
 data_util.loadTextFile(fn, function(D) {
 
   //decision tree deals with both numeric/categorical features
-  //but you have to specify its type individually through a file. if not given all features will be treated as categorical
+  //but you have to specify its type individually in 2nd line of the file
 
   var start = process.hrtime();
   new learningjs.tree().train(D, function(model, err){
