@@ -11,6 +11,17 @@ Javascript implementation of several machine learning algorithms including Decis
 #Online Demo
 Here's a online [demo](http://www.cs.cmu.edu/~yandongl/learningjs/decision-tree-demo.html) with visualization and a few datasets.
 
+#Data format
+Input files need to be in CSV-format with 1st line being feature names. One of the features has to be called 'label'. E.g.  
+<pre>
+outlook, temp, humidity, wind, label
+text, real, text, text, feature_type
+'Sunny',80,'High', 'Weak', 'No'
+'Sunny',82,'High', 'Strong', 'No'
+'Overcast',73,'High', 'Weak', 'Yes' 
+</pre>
+There's also an optional 2nd line for feature types and the 'label' column for 2nd line has to be called 'feature_type'. This is useful if feature types are mixed.
+
 #Usage
 Data loading: data_util.js provides three methods:
 
