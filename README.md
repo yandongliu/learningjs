@@ -2,16 +2,16 @@ LearningJS: A Javascript Implementation of Logistic Regression and C4.5 Decision
 ==========
 Author: Yandong Liu. Email: yandongl @ cs.cmu.edu
 
-#Update
+# Update
 I've made some update on the data loading logic so now it reads in csv-format file. Previous version is still accessible but it's no longer supported.
 
-#Introduction
+# Introduction
 Javascript implementation of several machine learning algorithms including Decision Tree and Logistic Regression this far. More to come.
 
-#Online Demo
+# Online Demo
 Here's a online [demo](http://www.cs.cmu.edu/~yandongl/learningjs/decision-tree-demo.html) with visualization and a few datasets.
 
-#Data format
+# Data format
 Input files need to be in CSV-format with 1st line being feature names. One of the features has to be called 'label'. E.g.  
 <pre>
 outlook, temp, humidity, wind, label
@@ -30,7 +30,7 @@ label,a,b,c,d,e,f,g,h,i,j,k,l,m
 </pre>
 
 
-#Usage
+# Usage
 Data loading: data_util.js provides three methods:
 
  * `loadTextFile`: the csv-format file will be loaded from disk and columns are parsed as strings unless 2nd line specifies feature types.
@@ -58,7 +58,7 @@ loadString(content, function(D) {
 }); 
 ```
 
-#Use in Nodejs
+# Use in Nodejs
 Similarly you need to import the lib and do the same:
 
 ```javascript 
@@ -93,5 +93,5 @@ data_util.loadRealFile(fn_csv, function(D) {
 }); 
 ```
 
-#License
+# License
 MIT
